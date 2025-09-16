@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from . import models, schemas
+from . import models, schemas, auth
 from .database import SessionLocal, engine, Base
 from .auth import verify_device_auth_compatible, get_db, DeviceAuthenticator
 from .utils.mac_manager import MACManager
@@ -470,3 +470,54 @@ async def get_metrics(db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Metrics collection failed: {str(e)}")
         return {"error": "Unable to collect metrics"}
+    
+#  GET /data/ 
+# 修正後的 GET /data/ 端點
+@app.get("/data/", response_model=list[schemas.EnergyRawResponse])
+def read_data(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    讀取所有儲存的原始能源數據，並使用正確的資料庫欄位名稱。
+    """
+    db_records = db.query(models.EnergyRaw).order_by(models.EnergyRaw.id.desc()).offset(skip).limit(limit).all()
+
+    result = []
+    for record in db_records:
+        # 建構包含所有實際欄位的字典
+        raw_data_dict = {
+            "timestamp_utc": record.timestamp_utc,
+            "gpu_model": getattr(record, 'gpu_model', None),
+            "gpu_usage_percent": getattr(record, 'gpu_usage_percent', None),
+            "gpu_power_watt": getattr(record, 'gpu_power_watt', None),
+            "cpu_power_watt": getattr(record, 'cpu_power_watt', None),
+            "memory_used_mb": getattr(record, 'memory_used_mb', None),
+            "disk_read_mb_s": getattr(record, 'disk_read_mb_s', None),
+            "disk_write_mb_s": getattr(record, 'disk_write_mb_s', None),
+            "system_power_watt": getattr(record, 'system_power_watt', None),
+            "device_id": record.device_id,
+            "user_id": getattr(record, 'user_id', None),
+            "agent_version": getattr(record, 'agent_version', None),
+            "os_type": getattr(record, 'os_type', None),
+            "os_version": getattr(record, 'os_version', None),
+            "location": getattr(record, 'location', None),
+            "cpu_model": getattr(record, 'cpu_model', None),
+            "cpu_count": getattr(record, 'cpu_count', None),
+            "total_memory": getattr(record, 'total_memory', None),
+            "disk_partitions": getattr(record, 'disk_partitions', None),
+            "network_interfaces": getattr(record, 'network_interfaces', None),
+            "platform_machine": getattr(record, 'platform_machine', None),
+            "platform_architecture": getattr(record, 'platform_architecture', None)
+        }
+        
+        result.append({
+            "id": record.id,
+            "timestamp_utc": record.timestamp_utc,
+            "device_id": record.device_id,
+            "user_id": getattr(record, 'user_id', None),
+            "raw_data": raw_data_dict,  # 現在包含所有原始數據
+            "mac_address": getattr(record, 'mac_address', None),
+            "is_cleaned": getattr(record, 'is_cleaned', False),
+            "risk_level": getattr(record, 'risk_level', None),
+            "device_fingerprint": getattr(record, 'device_fingerprint', None)
+        })
+
+    return result

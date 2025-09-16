@@ -97,3 +97,18 @@ class DeviceFingerprintResponse(BaseModel):
 class FingerprintCheckResult(BaseModel):
     fingerprint_check: DeviceFingerprintResponse
     status: str
+
+# 用於 API 回應的資料庫原始記錄模型
+class EnergyRawResponse(BaseModel):
+    id: int
+    timestamp_utc: datetime
+    device_id: str
+    user_id: str
+    raw_data: Optional[dict] = None
+    mac_address: Optional[str] = None
+    is_cleaned: Optional[bool] = None
+    risk_level: Optional[str] = None
+    device_fingerprint: Optional[str] = None
+
+    class Config:
+        from_attributes = True
