@@ -33,4 +33,8 @@ Traceback (most recent call last):
   File "C:\Users\alisa\OneDrive\Desktop\project-root_0909\agent\integrated_agent.py", line 709, in run
     time.sleep(60)
 KeyboardInterrupt
+^CTraceback (most recent call last):
+  File "C:\Users\ckklab\Desktop\project-root_0909\agent\integrated_agent.py", line 16, in <module>
+    from pynput import mouse, keyboard
+ModuleNotFoundError: No module named 'pynput'
 ^C

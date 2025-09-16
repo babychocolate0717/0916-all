@@ -15,6 +15,7 @@ from datetime import datetime, timezone, time as dtime
 import subprocess
 from pynput import mouse, keyboard
 import threading
+import sys
 import socket
 import yaml
 from typing import Dict, Any
@@ -25,15 +26,30 @@ AUTH_SECRET_KEY = "NTCUST-ENERGY-MONITOR"
 FALLBACK_TO_CSV = True
 
 # config.yaml
-def load_config():
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
-        with open('config.yaml', 'r', encoding='utf-8') as f:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+def load_config():
+    """ Loads the configuration from config.yaml. """
+    config_path = resource_path("config.yaml") # <--- 關鍵修改
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
-        print("警告: config.yaml 不存在，將使用預設設定。")
+        # This warning will now only appear if the file was not bundled correctly
+        print("WARNING: config.yaml not found. Using default settings.")
         return {
             'collection_interval': 60,
-            'quota': {'daily_limit_kwh': 100}
+            'quota': {'daily_limit_kwh': 100},
+            'api_base_url': 'http://localhost:8000', # Added default for safety
+            'auth_secret_key': 'NTCUST-ENERGY-MONITOR'
         }
 
 config = load_config()
