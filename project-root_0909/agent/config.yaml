@@ -1,0 +1,17 @@
+# config.yaml
+# 系統配置
+collection_interval: 60  # 收集間隔（秒）
+buffer_size: 50         # 批次大小
+change_threshold: 5     # 變化閾值
+
+# 配額設定
+quota:
+  daily_limit_kwh: 100      # 每日限額
+  warning_threshold: 0.8    # 警告閾值 80%
+  critical_threshold: 0.95  # 危急閾值 95%
+
+# 輸出設定
+output:
+  csv_enabled: true
+  json_enabled: true
+  console_enabled: true
